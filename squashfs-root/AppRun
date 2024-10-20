@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# adds a help message to the appimage, we don't need to execute the stuff below for showing this!
+if ( [ $# != 0  ] && [ "$1" = "--help" ] ) || ( [ $# != 0 ] && [ "$1" = "-h" ] ); then
+  echo "AppImage usage:
+ --help				 print this message.
+ --appimage-mount		 mounts the internal directory structure to a tmp directory
+ --headless			 disables the internal simspark monitor
+
+usage: rcssserver3d [options] [script]
+options:
+ --script-path PATH		 set the script path (rcssserver3d.rb path).
+ --init-script-prefix PATH	 path prefix for init scripts (spark.rb, oxygen.rb, etc.).
+ --agent-port PORTNUM		 port for agents to connect to.
+ --server-port PORTNUM		 port for monitors to connect to."
+  exit 0
+fi
+
+# var definition
+SELF_DIR="$(dirname "$(readlink -f "$0")")"
+LIBS_PATH="$SELF_DIR/lib:$SELF_DIR/lib/simspark:$SELF_DIR/lib/rcssserver3d"
+SIMSPARK_ARGS="rcssserverspl.rb"
+
+# copy the script file to the simspark home dir to make sure the file exists for later modification
+if [ ! -f $HOME/.simspark/rcssserverspl.rb ]; then
+  cp $SELF_DIR/share/simspark/rcssserverspl.rb $HOME/.simspark/
+fi
+
+# add "virtual" argument - disable monitor (GUI)
+if [ $# != 0 -a "$1" = "--headless" ]; then
+  # if starting headless, use a backup file which is modified and used for simspark
+  cp $HOME/.simspark/rcssserverspl.rb $HOME/.simspark/rcssserverspl-appimage.rb
+  sed -i 's/$enableInternalMonitor = true/$enableInternalMonitor = false/g' $HOME/.simspark/rcssserverspl-appimage.rb
+  # extend argument list
+  set -- "" "--script-path" "rcssserverspl-appimage.rb"
+  shift 1
+fi
+
+# set library path
+if [ -z "$LD_LIBRARY_PATH" ]; then
+  LD_LIBRARY_PATH="$LIBS_PATH"
+else
+  LD_LIBRARY_PATH="$LIBS_PATH:$LD_LIBRARY_PATH"
+fi
+export LD_LIBRARY_PATH
+
+# set the environment vars
+export SPARK_DIR="$SELF_DIR"
+export RCSS_BUNDLE_PATH="$SELF_DIR"
+
+# change working directory and exceute application
+cd $SELF_DIR
+exec "$SELF_DIR/bin/simspark" "$@"
