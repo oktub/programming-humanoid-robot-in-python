@@ -32,6 +32,9 @@ class AngleInterpolationAgent(PIDAgent):
                  sync_mode=True):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
+        # Used to track the time offset of the perception.time so that
+        # the keyframe times actually line up
+        self.timeOffs = 0
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -42,6 +45,64 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
+        # Target joints should map each joint to an target angle
+        names, times, keys = keyframes
+
+        # Set the offset if not yet set
+        if self.timeOffs == 0:
+            self.timeOffs = perception.time
+
+        # Get the current relative time
+        t = perception.time - self.timeOffs
+
+        for idx in range(len(names)):
+            # check whether the current time is out of bounds for keyframes
+            if t > times[idx][-1]:
+                continue
+
+            # Find inbetween which keyframes the current time sits
+            lTime = 0
+            rTime = 0
+            tIDX = -1
+
+            for timeIDX in range(len(times[idx])):
+                # Update the right time
+                rTime = times[idx][timeIDX]
+
+                # Out of bounds to the left or right
+                if lTime > t or rTime < t:
+                    # Update the left time
+                    lTime = rTime
+
+                    continue
+
+                # Copy the index of the current time entry
+                tIDX = timeIDX
+
+                break
+
+            # Calculate the incline
+            incl = (t - lTime) / (rTime - lTime)
+
+            # Calculate the Ps
+            if tIDX == 0:
+                p0 = p1 = 0
+            else:
+                p0 = keys[idx][timeIDX - 1][0]
+                p1 = p0 + keys[idx][timeIDX - 1][2][2]
+
+            p3 = keys[idx][timeIDX][0]
+            p2 = p3 + keys[idx][timeIDX][1][2]
+
+            # Calculate the target angle
+            a = p0 * (1 - incl)**3 + p1 * 3 * incl * (1 - incl)**2 + p2 * 3 * (incl ** 2) * (1 - incl) + p3 * (incl**3)
+
+            # Write the angle
+            target_joints[names[idx]] = a
+
+        # Make sure tthe LHipYawPitch exists at all times, as it gets copied
+        if target_joints.get("LHipYawPitch") == None:
+            target_joints["LHipYawPitch"] = 0
 
         return target_joints
 
