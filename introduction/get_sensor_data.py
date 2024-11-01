@@ -15,6 +15,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 from spark_agent import SparkAgent
 #from ..software_installation.spark_agent import SparkAgent
 
+
 class MyAgent(SparkAgent):
     def think(self, perception):
         angle = 0

@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 import numpy as np
 from collections import deque
 from spark_agent import SparkAgent, JOINT_CMD_NAMES
+#from ..software_installation.spark_agent import SparkAgent, JOINT_CMD_NAMES
 
 
 class PIDController(object):
@@ -35,9 +36,9 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 20
+        self.Ki = 0.1
+        self.Kd = 0.2
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -52,7 +53,17 @@ class PIDController(object):
         @param sensor: current values from sensor
         @return control signal
         '''
-        # YOUR CODE HERE
+        # difference between command and measurement
+        e: np.ndarray = target - sensor
+
+        # new u
+        kddt = self.Kd / self.dt
+        utk = (self.Kp + self.Ki * self.dt + kddt) * e - (self.Kp + 2 * kddt) * self.e1 + kddt * self.e2
+        self.u += utk
+
+        # update buffers
+        self.e2 = self.e1.copy()
+        self.e1 = e.copy()
 
         return self.u
 
