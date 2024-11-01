@@ -22,6 +22,11 @@
 
 from pid import PIDAgent
 from keyframes import hello
+from keyframes import leftBackToStand
+from keyframes import leftBellyToStand
+from keyframes import rightBackToStand
+from keyframes import rightBellyToStand
+from keyframes import wipe_forehead
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -82,7 +87,7 @@ class AngleInterpolationAgent(PIDAgent):
                 break
 
             # Calculate the incline
-            incl = (t - lTime) / (rTime - lTime)
+            incl = (lTime - t) / (lTime - rTime)
 
             # Calculate the Ps
             if tIDX == 0:
@@ -108,5 +113,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = leftBackToStand() # hello()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
