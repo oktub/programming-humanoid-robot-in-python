@@ -21,17 +21,22 @@ class StandingUpAgent(PostureRecognitionAgent):
     def standing_up(self):
         posture = self.posture
 
+        # skip if currently not able to move
         if (self.perception.time - self.stiffness_on_off_time) <= self.stiffness_off_cycle:
             self.keyframes = ([], [], [])
 
             return
-        
+
+        # decide which motion to start
         if posture in ["Left", "Back", "Sit", "HeadBack"]:
             self.keyframes = leftBackToStand()
         elif posture == "Right":
-            self.keyframes = rightBellyToStand()
+            self.keyframes = rightBackToStand()
         elif posture == "Belly":
             self.keyframes = leftBellyToStand()
+        else:
+            # no new motion to start, current one continues until finished
+            pass
 
 class TestStandingUpAgent(StandingUpAgent):
     '''this agent turns off all motor to falls down in fixed cycles
