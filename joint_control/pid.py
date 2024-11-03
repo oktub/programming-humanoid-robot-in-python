@@ -57,7 +57,7 @@ class PIDController(object):
         # new target
         nx = sensor + self.dt * self.u
         self.y.appendleft(nx)
-        e: np.ndarray = target - (sensor - nx + self.y.pop())
+        e = target - (sensor - nx + self.y.pop())
 
         # new u
         kddt = self.Kd / self.dt
