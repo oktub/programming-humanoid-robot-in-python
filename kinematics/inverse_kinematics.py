@@ -10,10 +10,7 @@
 '''
 
 from forward_kinematics import ForwardKinematicsAgent
-from numpy.matlib import identity, matrix, arctan2
-import numpy as np
-from scipy.linalg import pinv
-
+from numpy.matlib import *
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def from_trans(self, m):
@@ -36,7 +33,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''
         joint_angles = [0] * len(self.chains[effector_name])
         # YOUR CODE HERE
-        target = np.array(self.from_trans(transform)).T
+        target = array(self.from_trans(transform)).T
 
         lambda_ = 1
         max_step = 0.07
@@ -53,12 +50,12 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             T = list(map(lambda m: self.from_trans(m), Ts))
             J = Te - T
             J[:, -1] = 1
-            d_theta = lambda_ * np.dot(np.dot(J, np.linalg.pinv(np.dot(J.T, J))), e.T)
+            d_theta = lambda_ * dot(dot(J, linalg.pinv(dot(J.T, J))), e.T)
 
             for i in range(len(self.chains[effector_name])):
-                joint_angles[i] += np.asarray(d_theta.T)[0][i]
+                joint_angles[i] += asarray(d_theta.T)[0][i]
 
-            if np.linalg.norm(d_theta) < 1e-4:
+            if linalg.norm(d_theta) < 1e-4:
                 break
 
         return joint_angles
@@ -84,5 +81,5 @@ if __name__ == '__main__':
     T = identity(4)
     T[-1, 1] = 0.05
     T[-1, 2] = -0.26
-    agent.set_transforms('LArm', T)
+    agent.set_transforms('LLeg', T)
     agent.run()
