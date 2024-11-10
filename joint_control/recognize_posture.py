@@ -38,7 +38,6 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         joints = ["LHipYawPitch", "LHipRoll", "LHipPitch", "LKneePitch", "RHipYawPitch", "RHipRoll", "RHipPitch", "RKneePitch"]
         data = [perception.joint.get(joint) for joint in joints] + [perception.imu[0], perception.imu[1]]
         idx = self.posture_classifier.predict([data])[0]
-        print(postures[idx])
 
         return postures[idx]
 
